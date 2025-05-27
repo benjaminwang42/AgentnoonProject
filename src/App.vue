@@ -1,10 +1,13 @@
 <script>
+import CostAnalysis from "./components/CostAnalysis.vue";
 import * as d3 from "d3";
 import csvData from "./assets/GigaCorp.csv?raw";
 
 export default {
   name: "App",
-  components: {},
+  components: {
+    CostAnalysis,
+  },
   data() {
     return {
       parsed: [],
@@ -311,22 +314,36 @@ export default {
 </script>
 
 <template>
-  <div class="container mx-auto">
-    <div class="flex justify-center gap-4 py-4">
-      <button
-        @click="selectPage('hierarchy')"
-        class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
-      >
-        Hierarchy
-      </button>
-      <button
-        @click="selectPage('bonus')"
-        class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
-      >
-        Bonus
-      </button>
+  <div>
+    <div
+      class="flex justify-between items-center py-5 px-16 mb-10"
+      :class="{
+        'border-b': !displayHierarchy,
+        'border-black': !displayHierarchy,
+      }"
+    >
+      <div class="pr-5 text-lg font-semibold">
+        Benjamin Wang's Agentnoon Submission
+      </div>
+
+      <div class="flex gap-4 pl-5">
+        <button
+          @click="selectPage('hierarchy')"
+          class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
+        >
+          Hierarchy
+        </button>
+        <button
+          @click="selectPage('bonus')"
+          class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
+        >
+          Bonus
+        </button>
+      </div>
     </div>
+
     <div v-if="displayHierarchy" ref="chartContainer"></div>
+    <CostAnalysis v-if="!displayHierarchy" :data="parsed" />
   </div>
 </template>
 
