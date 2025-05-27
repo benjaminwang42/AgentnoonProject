@@ -14,7 +14,6 @@ export default {
   },
   mounted() {
     this.parsed = d3.csvParse(csvData).splice(0, 100);
-    // this.parsed = d3.csvParse(csvData);
     this.makeTree(this.parsed);
     this.roots.forEach((root) => {
       this.calculateCosts(root);
@@ -31,8 +30,9 @@ export default {
         person.children = [];
         person.managementCost = 0;
         person.ICCost = 0;
-        person.totalCost = 0;
         person.managementCostRatio = 0;
+        person.descendants = 0;
+        person.nonLeafDescendants = 0;
 
         employeeMap.set(person["Employee Id"], person);
       });
@@ -48,12 +48,16 @@ export default {
     calculateCosts(person) {
       let managementCost = 0;
       let ICCost = 0;
-      let totalCost = 0;
+      let descendants = 0;
+      let nonLeafDescendants = 0;
+
       for (const child of person.children) {
         this.calculateCosts(child);
-        totalCost += child.totalCost;
+
+        descendants += child.descendants + 1;
 
         if (child.children.length > 0) {
+          nonLeafDescendants += child.nonLeafDescendants + 1;
           managementCost += Number(child.Salary);
           managementCost += child.managementCost;
           ICCost += child.ICCost;
@@ -62,9 +66,11 @@ export default {
         }
       }
 
+      person.descendants = descendants;
+      person.nonLeafDescendants = nonLeafDescendants;
       person.managementCost = managementCost;
       person.ICCost = ICCost;
-      person.totalCost = totalCost;
+      person.totalCost = managementCost + ICCost;
       person.managementCostRatio = ICCost
         ? parseFloat((managementCost / ICCost).toFixed(2))
         : -1;
@@ -77,14 +83,14 @@ export default {
       });
     },
     createTreeChart(data) {
-      const marginTop = 80;
-      const marginRight = 10;
-      const marginBottom = 80;
-      const marginLeft = 100;
+      const marginTop = 180;
+      const marginRight = 200;
+      const marginBottom = 180;
+      const marginLeft = 200;
 
       const root = d3.hierarchy(data);
-      const dx = 100;
-      const dy = 200;
+      const dx = 240;
+      const dy = 320;
       const tree = d3.tree().nodeSize([dx, dy]);
       tree(root);
 
@@ -173,28 +179,68 @@ export default {
             update(event, d);
           });
 
+        const format = this.format;
+
         nodeEnter
           .append("foreignObject")
-          .attr("x", -80)
-          .attr("y", -30)
-          .attr("width", 160)
-          .attr("height", 70)
+          .attr("x", -130)
+          .attr("y", -120)
+          .attr("width", 260)
+          .attr("height", 240)
           .html(
             (d) => `
           <div xmlns="http://www.w3.org/1999/xhtml" style="
             background: white;
             border: 1px solid #ccc;
             border-radius: 8px;
-            padding: 6px 8px;
+            padding: 12px 8px;
             font-size: 10px;
             line-height: 1.3;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            width: 140px;
+            width: 260px;
+            background-color: #f0fbfd;
+            text-align: center;
           ">
-            <div><strong>${d.data.name}</strong></div>
-            <div>Salary: $${(+d.data.Salary || 0).toLocaleString()}</div>
-            <div>IC: $${d.data.ICCost?.toFixed(0) ?? "N/A"}</div>
-            <div>Mgmt: $${d.data.managementCost?.toFixed(0) ?? "N/A"}</div>
+            <div><strong style="font-size: 16px;"><i class="fa-regular fa-circle-user" style="margin-right: 8px;"></i>${
+              d.data.name
+            }  (${d.data.children.length} / ${
+              d.data.descendants
+            })</strong></div>
+            <div style="color: grey; margin-bottom: 10px;">${
+              d.data["Job Title"]
+            }</div>
+            <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; margin-top: 4px; color: black; font-weight: 500; ">
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">${
+                d.data.Project
+              }</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;"><i class="fa-solid fa-location-dot" style="margin-right: 4px"></i>${
+                d.data.Location
+              }</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">Level: ${
+                d.data.level
+              }</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">Salary: $${format(
+                Number(d.data.Salary)
+              )}</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">IC Cost: $${format(
+                d.data.ICCost
+              )}</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">Management Cost: $${format(
+                d.data.managementCost
+              )}</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">Total Cost: $${format(
+                d.data.totalCost
+              )}</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;">Management Cost Ratio: ${
+                d.data.managementCostRatio
+              }</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;"># Non-leaf Descendants: ${
+                d.data.nonLeafDescendants
+              }</span>
+              <span style="display: inline-block; padding: 4px 6px; border-radius: 16px; font-size: 9px; white-space: nowrap; background-color: #bdeef4; color: #006064;"># Descendants: ${
+                d.data.descendants
+              }</span>
+            </div>
           </div>
         `
           );
@@ -254,15 +300,31 @@ export default {
         this.displayHierarchy = false;
       }
     },
+    format(num) {
+      if (num >= 1e9) return Number(num / 1e9).toFixed(2) + "B";
+      if (num >= 1e6) return Number(num / 1e6).toFixed(2) + "M";
+      if (num >= 1e3) return Number(num / 1e3).toFixed(2) + "K";
+      return num.toString();
+    },
   },
 };
 </script>
 
 <template>
-  <div class="container">
-    <div style="display: flex; justify-content: center; gap: 16px">
-      <button @click="selectPage('hierarchy')">Hierarchy</button>
-      <button @click="selectPage('bonus')">Bonus</button>
+  <div class="container mx-auto">
+    <div class="flex justify-center gap-4 py-4">
+      <button
+        @click="selectPage('hierarchy')"
+        class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
+      >
+        Hierarchy
+      </button>
+      <button
+        @click="selectPage('bonus')"
+        class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 shadow text-sm font-medium hover:bg-gray-100 transition"
+      >
+        Bonus
+      </button>
     </div>
     <div v-if="displayHierarchy" ref="chartContainer"></div>
   </div>
