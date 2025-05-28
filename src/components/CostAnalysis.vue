@@ -3,7 +3,7 @@
     <div class="ml-60 mb-6">
       <select
         v-model="currentCategory"
-        class="border border-gray-300 rounded p-2 mr-4 text-sm"
+        class="border border-gray-300 rounded p-2 mr-4 text-sm mb-2"
       >
         <option value="entity">Entity View</option>
         <option value="level">Level View</option>
@@ -11,7 +11,7 @@
       </select>
       <select
         v-model="sumType"
-        class="border border-gray-300 rounded p-2 mr-4 text-sm"
+        class="border border-gray-300 rounded p-2 mr-4 text-sm mb-2"
       >
         <option value="actuals">Actuals</option>
         <option value="percentages">Percentages</option>
