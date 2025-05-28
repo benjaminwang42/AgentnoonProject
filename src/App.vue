@@ -16,7 +16,7 @@ export default {
     };
   },
   mounted() {
-    this.parsed = d3.csvParse(csvData).splice(0, 100);
+    this.parsed = d3.csvParse(csvData);
     this.makeTree(this.parsed);
     this.roots.forEach((root) => {
       this.calculateCosts(root);
@@ -76,7 +76,7 @@ export default {
       person.totalCost = managementCost + ICCost;
       person.managementCostRatio = ICCost
         ? parseFloat((managementCost / ICCost).toFixed(2))
-        : -1;
+        : "N/A";
     },
     drawCharts() {
       this.$refs.chartContainer.innerHTML = "";
@@ -206,9 +206,7 @@ export default {
           ">
             <div><strong style="font-size: 16px;"><i class="fa-regular fa-circle-user" style="margin-right: 8px;"></i>${
               d.data.name
-            }  (${d.data.children.length} / ${
-              d.data.descendants
-            })</strong></div>
+            }  (${d.data.children.length})</strong></div>
             <div style="color: grey; margin-bottom: 10px;">${
               d.data["Job Title"]
             }</div>
